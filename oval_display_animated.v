@@ -27,7 +27,7 @@ module oval_display (
     reg [11:0] pixel_color;
     wire [11:0] mole_pixel_color;
 
-    // Instantiate mole animation
+    // Instantiate mole animation with new version
     mole_animation mole (
         .clk(clk),
         .rst(rst),
@@ -64,9 +64,10 @@ module oval_display (
                 pixel_color = (oval_select == 3'd3) ? SELECTED_COLOR : UNSELECTED_COLOR;
             else if (is_in_oval(x, y, OVAL5_X, OVAL5_Y, X_RADIUS, Y_RADIUS))
                 pixel_color = (oval_select == 3'd4) ? SELECTED_COLOR : UNSELECTED_COLOR;
-                
-            // Override with mole color if mole pixel is present
-            if (mole_pixel_color != UNSELECTED_COLOR)
+            
+            // Override with mole color if mole pixel is not transparent
+            // Changed to check for specific transparent color (12'hFFF)
+            if (mole_pixel_color != 12'hFFF)
                 pixel_color = mole_pixel_color;
         end
     end
