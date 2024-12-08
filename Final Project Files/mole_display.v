@@ -1,10 +1,7 @@
-`timescale 1ns / 1ps
-
-
-
 module mole_display (
     input wire clk,          // System clock
     input wire reset,        // Reset signal
+    input wire [2:0] oval_select,
     output wire hsync,       // Horizontal sync
     output wire vsync,       // Vertical sync
     output reg [3:0] red,    // Red color (4 bits)
@@ -17,15 +14,39 @@ module mole_display (
     wire video_on;                // Video active region flag
     wire [63:0] mole_pattern;     // Current row's mole pattern
     
-    // Position of mole (you can adjust these values)
-    localparam MOLE_X = 100;  // Starting X position
-    localparam MOLE_Y = 100;  // Starting Y position
+    // Mole dimensions
     localparam MOLE_WIDTH = 64;  // Width of mole pattern
     localparam MOLE_HEIGHT = 32; // Height of mole pattern
     
-    // Color values (you can adjust these)
+    // Color values
     localparam [11:0] MOLE_COLOR = 12'hFFF;    // White mole
     localparam [11:0] BG_COLOR = 12'h000;      // Black background
+
+    // Oval coordinates
+    parameter [9:0] OVAL1_X = 320, OVAL1_Y = 120;
+    parameter [9:0] OVAL2_X = 220, OVAL2_Y = 220;
+    parameter [9:0] OVAL3_X = 320, OVAL3_Y = 220;
+    parameter [9:0] OVAL4_X = 420, OVAL4_Y = 220;
+    parameter [9:0] OVAL5_X = 320, OVAL5_Y = 320;
+    
+    // Dynamic mole position
+    wire [9:0] MOLE_X;
+    wire [9:0] MOLE_Y;
+    
+    // Mole position selection logic
+    assign MOLE_X = (oval_select == 3'd1) ? OVAL1_X - (MOLE_WIDTH / 2) :
+                    (oval_select == 3'd2) ? OVAL2_X - (MOLE_WIDTH / 2) :
+                    (oval_select == 3'd3) ? OVAL3_X - (MOLE_WIDTH / 2) :
+                    (oval_select == 3'd4) ? OVAL4_X - (MOLE_WIDTH / 2) :
+                    (oval_select == 3'd5) ? OVAL5_X - (MOLE_WIDTH / 2) :
+                    OVAL1_X - (MOLE_WIDTH / 2); // Default to first oval
+    
+    assign MOLE_Y = (oval_select == 3'd1) ? OVAL1_Y - (MOLE_HEIGHT / 2) :
+                    (oval_select == 3'd2) ? OVAL2_Y - (MOLE_HEIGHT / 2) :
+                    (oval_select == 3'd3) ? OVAL3_Y - (MOLE_HEIGHT / 2) :
+                    (oval_select == 3'd4) ? OVAL4_Y - (MOLE_HEIGHT / 2) :
+                    (oval_select == 3'd5) ? OVAL5_Y - (MOLE_HEIGHT / 2) :
+                    OVAL1_Y - (MOLE_HEIGHT / 2); // Default to first oval
     
     // Instantiate VGA sync circuit
     vga_sync vga_sync_unit (

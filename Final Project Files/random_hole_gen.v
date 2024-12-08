@@ -15,8 +15,7 @@ module random_hole_gen (
         end
     end
 
-    // Map LFSR output to 0-4
     always @(*) begin
-        hole = lfsr % 5 + 1; // Limit the range to 0-4
+        hole = lfsr % 5 + 1; // Limit the range to 1-5
     end
 endmodule

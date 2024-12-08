@@ -16,6 +16,8 @@ module combined_display (
     wire [9:0] x, y;
     wire [11:0] rgb;
 
+    wire [3:0] mole_red, mole_green, mole_blue;
+    wire mole_hsync, mole_vsync;
     // VGA sync
     vga_sync vga_sync_unit (
         .clk(clk),
@@ -25,6 +27,17 @@ module combined_display (
         .video_on(video_on),
         .x(x),
         .y(y)
+    );
+
+    mole_display mole_display_unit (
+        .clk(clk),
+        .reset(rst),
+        .oval_select(oval_select),
+        .hsync(mole_hsync),
+        .vsync(mole_vsync),
+        .red(mole_red),
+        .green(mole_green),
+        .blue(mole_blue)
     );
 
     // Clock divider
@@ -186,6 +199,17 @@ module combined_display (
             pixel_color = 12'h000;
     end
 
+    // Output color blending (to incorporate mole)
+    wire [3:0] final_red, final_green, final_blue;
+    assign final_red = (mole_red != 4'h0) ? mole_red : red;
+    assign final_green = (mole_green != 4'h0) ? mole_green : green;
+    assign final_blue = (mole_blue != 4'h0) ? mole_blue : blue;
+
+    // Output assignment
+    assign red = final_red;
+    assign green = final_green;
+    assign blue = final_blue;
+    
     // Output assignment
     assign red = pixel_color[11:8];
     assign green = pixel_color[7:4];
