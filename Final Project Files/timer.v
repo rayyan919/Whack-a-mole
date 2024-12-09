@@ -1,7 +1,5 @@
 `timescale 1ns / 1ps 
 
-
-
 module game_timer (
     input wire clk,
     input wire rst,
@@ -11,81 +9,120 @@ module game_timer (
     output reg [7:0] time_LSB_ascii,
     output reg timer_done
 );
+    // State encoding using standard parameters
+    parameter IDLE = 2'b00;
+    parameter RUNNING = 2'b01;
+    parameter PAUSED = 2'b10;
+    parameter DONE = 2'b11;
+
+    // State and timer variables
+    reg [1:0] current_state, next_state;
     reg [4:0] time_left;
-    reg counting;
-   
-    // Hardcoded ASCII conversion logic
+
+    // Combinational logic for next state and outputs
+    always @(*) begin
+        // Default assignments
+        next_state = current_state;
+        timer_done = 1'b0;
+
+        case (current_state)
+            IDLE: begin
+                // Move to RUNNING when enabled
+                if (enable) begin
+                    next_state = RUNNING;
+                end
+            end
+
+            RUNNING: begin
+                // Pause logic
+                if (pause) begin
+                    next_state = PAUSED;
+                end
+                // Timer completion logic
+                else if (time_left == 5'd1) begin
+                    next_state = DONE;
+                end
+            end
+
+            PAUSED: begin
+                // Resume or stay paused
+                if (!pause && enable) begin
+                    next_state = RUNNING;
+                end
+            end
+
+            DONE: begin
+                // Stay in DONE state until reset
+                timer_done = 1'b1;
+            end
+        endcase
+    end
+
+    // Sequential logic for state and timer updates
     always @(posedge clk or posedge rst) begin
         if (rst) begin
+            // Reset to initial state
+            current_state <= IDLE;
             time_left <= 5'd31;
-            timer_done <= 0;
-            time_MSB_ascii <= 8'h33;    // ASCII '3'
-            time_LSB_ascii <= 8'h31;    // ASCII '1'
-            counting <= 1;
+            time_MSB_ascii <= 8'h33;  // ASCII '3'
+            time_LSB_ascii <= 8'h31;  // ASCII '1'
         end
-        else if (pause) begin
-            counting <= 0;
-        end
-        else if (!pause && enable && counting) begin
-            if (time_left > 0) begin
-                time_left <= time_left - 1;
-               
-                // Hardcoded conversion based on time_left
-                case (time_left - 1)  // Using time_left - 1 since this is the next value
-                    // 31-30: MSB='3', LSB='1','0'
-                    31: begin time_MSB_ascii <= 8'h33; time_LSB_ascii <= 8'h31; end
-                    30: begin time_MSB_ascii <= 8'h33; time_LSB_ascii <= 8'h30; end
-                   
-                    // 29-20: MSB='2', LSB='9'-'0'
-                    29: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h39; end
-                    28: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h38; end
-                    27: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h37; end
-                    26: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h36; end
-                    25: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h35; end
-                    24: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h34; end
-                    23: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h33; end
-                    22: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h32; end
-                    21: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h31; end
-                    20: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h30; end
-                   
-                    // 19-10: MSB='1', LSB='9'-'0'
-                    19: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h39; end
-                    18: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h38; end
-                    17: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h37; end
-                    16: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h36; end
-                    15: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h35; end
-                    14: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h34; end
-                    13: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h33; end
-                    12: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h32; end
-                    11: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h31; end
-                    10: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h30; end
-                   
-                    // 9-0: MSB='0', LSB='9'-'0'
-                    9: begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h39; end
-                    8: begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h38; end
-                    7: begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h37; end
-                    6: begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h36; end
-                    5: begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h35; end
-                    4: begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h34; end
-                    3: begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h33; end
-                    2: begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h32; end
-                    1: begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h31; end
-                    0: begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h30; end
-                   
-                    // Default case
-                    default: begin
-                        time_MSB_ascii <= 8'h30;
-                        time_LSB_ascii <= 8'h30;
-                    end
-                endcase
+        else begin
+            // State transition
+            current_state <= next_state;
+
+            // Timer logic for RUNNING state
+            if (current_state == RUNNING) begin
+                if (time_left > 5'd1) begin
+                    time_left <= time_left - 1;
+
+                    // ASCII conversion logic
+                    case (time_left - 1)
+                        5'd31: begin time_MSB_ascii <= 8'h33; time_LSB_ascii <= 8'h31; end
+                        5'd30: begin time_MSB_ascii <= 8'h33; time_LSB_ascii <= 8'h30; end
+                        5'd29: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h39; end
+                        5'd28: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h38; end
+                        5'd27: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h37; end
+                        5'd26: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h36; end
+                        5'd25: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h35; end
+                        5'd24: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h34; end
+                        5'd23: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h33; end
+                        5'd22: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h32; end
+                        5'd21: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h31; end
+                        5'd20: begin time_MSB_ascii <= 8'h32; time_LSB_ascii <= 8'h30; end
+                        5'd19: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h39; end
+                        5'd18: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h38; end
+                        5'd17: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h37; end
+                        5'd16: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h36; end
+                        5'd15: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h35; end
+                        5'd14: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h34; end
+                        5'd13: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h33; end
+                        5'd12: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h32; end
+                        5'd11: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h31; end
+                        5'd10: begin time_MSB_ascii <= 8'h31; time_LSB_ascii <= 8'h30; end
+                        5'd9:  begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h39; end
+                        5'd8:  begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h38; end
+                        5'd7:  begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h37; end
+                        5'd6:  begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h36; end
+                        5'd5:  begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h35; end
+                        5'd4:  begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h34; end
+                        5'd3:  begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h33; end
+                        5'd2:  begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h32; end
+                        5'd1:  begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h31; end
+                        5'd0:  begin time_MSB_ascii <= 8'h30; time_LSB_ascii <= 8'h30; end
+                        default: begin
+                            time_MSB_ascii <= 8'h30;
+                            time_LSB_ascii <= 8'h30;
+                        end
+                    endcase
+                end
+                else if (time_left == 5'd1) begin
+                    // Last second
+                    time_left <= 5'd0;
+                    time_MSB_ascii <= 8'h30;
+                    time_LSB_ascii <= 8'h30;
+                end
             end
-           
-            if (time_left == 1) begin
-                timer_done <= 1;
-            end
-        end
-        else if (!pause && !counting) begin
-            counting <= 1;
         end
     end
 endmodule
@@ -97,31 +134,84 @@ module score_display (
     output reg [7:0] score_MSB_ascii,
     output reg [7:0] score_LSB_ascii
 );
-    // ASCII Conversion Logic
+    // Mealy FSM implementation
     always @(posedge clk or posedge rst) begin
         if (rst) begin
-            score_MSB_ascii <= 8'h30; // ASCII '0'
-            score_LSB_ascii <= 8'h30; // ASCII '0'
+            // Reset to initial state
+            score_MSB_ascii <= 8'h30;
+            score_LSB_ascii <= 8'h30;
         end
         else begin
+            // Mealy machine: outputs directly depend on current input and state
             case (score)
-                4'd0: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h30; end // "00"
-                4'd1: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h31; end // "01"
-                4'd2: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h32; end // "02"
-                4'd3: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h33; end // "03"
-                4'd4: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h34; end // "04"
-                4'd5: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h35; end // "05"
-                4'd6: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h36; end // "06"
-                4'd7: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h37; end // "07"
-                4'd8: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h38; end // "08"
-                4'd9: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h39; end // "09"
-                4'd10: begin score_MSB_ascii <= 8'h31; score_LSB_ascii <= 8'h30; end // "10"
-                4'd11: begin score_MSB_ascii <= 8'h31; score_LSB_ascii <= 8'h31; end // "11"
-                4'd12: begin score_MSB_ascii <= 8'h31; score_LSB_ascii <= 8'h32; end // "12"
-                4'd13: begin score_MSB_ascii <= 8'h31; score_LSB_ascii <= 8'h33; end // "13"
-                4'd14: begin score_MSB_ascii <= 8'h31; score_LSB_ascii <= 8'h34; end // "14"
-                4'd15: begin score_MSB_ascii <= 8'h31; score_LSB_ascii <= 8'h35; end // "15"
-                default: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h30; end // Default "00"
+                4'd0: begin
+                    score_MSB_ascii <= 8'h30;
+                    score_LSB_ascii <= 8'h30;
+                end
+                4'd1: begin
+                    score_MSB_ascii <= 8'h30;
+                    score_LSB_ascii <= 8'h31;
+                end
+                4'd2: begin
+                    score_MSB_ascii <= 8'h30;
+                    score_LSB_ascii <= 8'h32;
+                end
+                4'd3: begin
+                    score_MSB_ascii <= 8'h30;
+                    score_LSB_ascii <= 8'h33;
+                end
+                4'd4: begin
+                    score_MSB_ascii <= 8'h30;
+                    score_LSB_ascii <= 8'h34;
+                end
+                4'd5: begin
+                    score_MSB_ascii <= 8'h30;
+                    score_LSB_ascii <= 8'h35;
+                end
+                4'd6: begin
+                    score_MSB_ascii <= 8'h30;
+                    score_LSB_ascii <= 8'h36;
+                end
+                4'd7: begin
+                    score_MSB_ascii <= 8'h30;
+                    score_LSB_ascii <= 8'h37;
+                end
+                4'd8: begin
+                    score_MSB_ascii <= 8'h30;
+                    score_LSB_ascii <= 8'h38;
+                end
+                4'd9: begin
+                    score_MSB_ascii <= 8'h30;
+                    score_LSB_ascii <= 8'h39;
+                end
+                4'd10: begin
+                    score_MSB_ascii <= 8'h31;
+                    score_LSB_ascii <= 8'h30;
+                end
+                4'd11: begin
+                    score_MSB_ascii <= 8'h31;
+                    score_LSB_ascii <= 8'h31;
+                end
+                4'd12: begin
+                    score_MSB_ascii <= 8'h31;
+                    score_LSB_ascii <= 8'h32;
+                end
+                4'd13: begin
+                    score_MSB_ascii <= 8'h31;
+                    score_LSB_ascii <= 8'h33;
+                end
+                4'd14: begin
+                    score_MSB_ascii <= 8'h31;
+                    score_LSB_ascii <= 8'h34;
+                end
+                4'd15: begin
+                    score_MSB_ascii <= 8'h31;
+                    score_LSB_ascii <= 8'h35;
+                end
+                default: begin
+                    score_MSB_ascii <= 8'h30;
+                    score_LSB_ascii <= 8'h30;
+                end
             endcase
         end
     end
