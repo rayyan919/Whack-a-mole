@@ -6,7 +6,8 @@ module mole_display (
     output wire vsync,       // Vertical sync
     output reg [3:0] red,    // Red color (4 bits)
     output reg [3:0] green,  // Green color (4 bits)
-    output reg [3:0] blue    // Blue color (4 bits)
+    output reg [3:0] blue,   // Blue color (4 bits)
+    output wire [63:0] debug_mole_pattern  // Debug output of mole pattern
 );
 
     // Internal signals
@@ -33,7 +34,7 @@ module mole_display (
     wire [9:0] MOLE_X;
     wire [9:0] MOLE_Y;
     
-    // Mole position selection logic
+    // Mole position selection logic with more explicit debugging
     assign MOLE_X = (oval_select == 3'd1) ? OVAL1_X - (MOLE_WIDTH / 2) :
                     (oval_select == 3'd2) ? OVAL2_X - (MOLE_WIDTH / 2) :
                     (oval_select == 3'd3) ? OVAL3_X - (MOLE_WIDTH / 2) :
@@ -61,20 +62,23 @@ module mole_display (
     
     // Instantiate ASCII ROM
     wire [4:0] rom_addr;  // Row address for mole pattern
-    ascii_rom mole_rom (
+    mole_rom_ascii mole_rom (
         .row(rom_addr),
         .mole_pattern(mole_pattern)
     );
+    
+    // Debug output of mole pattern
+    assign debug_mole_pattern = mole_pattern;
     
     // Calculate relative position within mole area
     wire [9:0] mole_x_rel = pixel_x - MOLE_X;
     wire [9:0] mole_y_rel = pixel_y - MOLE_Y;
     
-    // Generate ROM address from y position
+    // Generate ROM address from y position with boundary checks
     assign rom_addr = (pixel_y >= MOLE_Y && pixel_y < MOLE_Y + MOLE_HEIGHT) ?
                      pixel_y - MOLE_Y : 5'd0;
     
-    // Generate RGB values
+    // Generate RGB values with more detailed logging
     always @* begin
         if (!video_on) begin
             // During blanking, output black
