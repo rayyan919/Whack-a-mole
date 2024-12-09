@@ -201,19 +201,14 @@ module combined_display (
 
     // Output color blending (to incorporate mole)
     wire [3:0] final_red, final_green, final_blue;
-    assign final_red = (mole_red != 4'h0) ? mole_red : red;
-    assign final_green = (mole_green != 4'h0) ? mole_green : green;
-    assign final_blue = (mole_blue != 4'h0) ? mole_blue : blue;
-
-    // Output assignment
+    assign final_red = (mole_red != 4'h0) ? mole_red : pixel_color[11:8];
+    assign final_green = (mole_green != 4'h0) ? mole_green : pixel_color[7:4];
+    assign final_blue = (mole_blue != 4'h0) ? mole_blue : pixel_color[3:0];
+    
+    // Assign final colors
     assign red = final_red;
     assign green = final_green;
     assign blue = final_blue;
-    
-    // Output assignment
-    assign red = pixel_color[11:8];
-    assign green = pixel_color[7:4];
-    assign blue = pixel_color[3:0];
 
 endmodule
 
