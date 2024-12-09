@@ -18,6 +18,10 @@ module combined_display (
 
     wire [3:0] mole_red, mole_green, mole_blue;
     wire mole_hsync, mole_vsync;
+    
+    // New register to hold the selected oval during pause
+    reg [2:0] paused_oval_select;
+
     // VGA sync
     vga_sync vga_sync_unit (
         .clk(clk),
@@ -32,7 +36,7 @@ module combined_display (
     mole_display mole_display_unit (
         .clk(clk),
         .reset(rst),
-        .oval_select(oval_select),
+        .oval_select(pause ? paused_oval_select : oval_select),
         .hsync(mole_hsync),
         .vsync(mole_vsync),
         .red(mole_red),
@@ -76,7 +80,6 @@ module combined_display (
         .score_MSB_ascii(score_MSB),
         .score_LSB_ascii(score_LSB)
     );
-
     // Parameters for colors
     parameter [11:0] BG_COLOR = 12'h000;
     parameter [11:0] UNSELECTED_COLOR = 12'hFFF;
@@ -173,7 +176,6 @@ module combined_display (
         end
     endfunction
 
-    // Pixel color determination
     reg [11:0] pixel_color;
     always @(*) begin
         if (video_on) begin
@@ -184,19 +186,29 @@ module combined_display (
                 pixel_color = BG_COLOR;
                 // Check ovals
                 if (is_in_oval(x, y, OVAL1_X, OVAL1_Y, X_RADIUS, Y_RADIUS))
-                    pixel_color = (oval_select == 3'd1) ? SELECTED_COLOR : UNSELECTED_COLOR;
+                    pixel_color = (pause ? (paused_oval_select == 3'd1) : (oval_select == 3'd1)) ? SELECTED_COLOR : UNSELECTED_COLOR;
                 else if (is_in_oval(x, y, OVAL2_X, OVAL2_Y, X_RADIUS, Y_RADIUS))
-                    pixel_color = (oval_select == 3'd2) ? SELECTED_COLOR : UNSELECTED_COLOR;
+                    pixel_color = (pause ? (paused_oval_select == 3'd2) : (oval_select == 3'd2)) ? SELECTED_COLOR : UNSELECTED_COLOR;
                 else if (is_in_oval(x, y, OVAL3_X, OVAL3_Y, X_RADIUS, Y_RADIUS))
-                    pixel_color = (oval_select == 3'd3) ? SELECTED_COLOR : UNSELECTED_COLOR;
+                    pixel_color = (pause ? (paused_oval_select == 3'd3) : (oval_select == 3'd3)) ? SELECTED_COLOR : UNSELECTED_COLOR;
                 else if (is_in_oval(x, y, OVAL4_X, OVAL4_Y, X_RADIUS, Y_RADIUS))
-                    pixel_color = (oval_select == 3'd4) ? SELECTED_COLOR : UNSELECTED_COLOR;
+                    pixel_color = (pause ? (paused_oval_select == 3'd4) : (oval_select == 3'd4)) ? SELECTED_COLOR : UNSELECTED_COLOR;
                 else if (is_in_oval(x, y, OVAL5_X, OVAL5_Y, X_RADIUS, Y_RADIUS))
-                    pixel_color = (oval_select == 3'd5) ? SELECTED_COLOR : UNSELECTED_COLOR;
+                    pixel_color = (pause ? (paused_oval_select == 3'd5) : (oval_select == 3'd5)) ? SELECTED_COLOR : UNSELECTED_COLOR;
             end
         end
         else
             pixel_color = 12'h000;
+    end
+
+    // Capture the current oval selection when pause is activated
+    always @(posedge clk or posedge rst) begin
+        if (rst)
+            paused_oval_select <= 3'd0;
+        else if (pause && !paused_oval_select)
+            paused_oval_select <= oval_select;
+        else if (!pause)
+            paused_oval_select <= 3'd0;
     end
 
     // Output color blending (to incorporate mole)
