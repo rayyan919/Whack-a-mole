@@ -5,13 +5,13 @@ module ClockDivider(
 );
     reg [31:0] counter = 0;  // 32-bit counter
 
-    parameter DIV_FACTOR = 50000000; // Adjust to desired frequency (e.g., 1 Hz if clk = 100 MHz)
+    parameter DIV_FACTOR = 9999999; // Adjust to desired frequency (e.g., 1 Hz if clk = 100 MHz)
 
     always @(posedge clk or posedge reset) begin
         if (reset) begin
             counter <= 0;
             slow_clk <= 0;
-        end else if (counter == (DIV_FACTOR - 1)) begin
+        end else if (counter == (DIV_FACTOR)) begin
             counter <= 0;
             slow_clk <= ~slow_clk;  // Toggle slow clock
         end else begin

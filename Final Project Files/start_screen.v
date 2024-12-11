@@ -1,12 +1,13 @@
+
+
 module start_screen
 	(
-		input wire clk, reset,
-		output wire hsync, vsync,
-		 output wire [3:0] red,
+    input wire clk, reset,
+    output wire hsync, vsync,
+     output wire [3:0] red,
     output wire [3:0] green,
     output wire [3:0] blue
 	);
-	 wire [11:0] rgb;
 	
 	// video status output from vga_sync to tell when to route out rgb signal to DAC
 	wire video_on;
@@ -203,22 +204,11 @@ module start_screen
     assign rom_col = x[2:0];
     assign rom_bit = rom_data[~rom_col]; //need to negate since it initially displays mirrored
     
-assign rgb = (video_on && displayContents) ? 12'hFFF : 12'h000;  // White for active pixel, else black
-
+//    assign rgb = (video_on && displayContents) ? 12'hFFF : 12'h000;  // White for active pixel, else black
+    assign {red, green, blue} = video_on ? 
+    (rom_bit ? 
+        (displayContents ? {4'hF, 4'hF, 4'hF} : {4'h0, 4'h8, 4'h0}) 
+        : {4'h0, 4'h0, 4'h8}) 
+    : {4'h0, 4'h0, 4'h0};
    // assign rgb = video_on ? (rom_bit ? ((displayContents) ? 12'hFFF: 12'h8): 12'h8) : 12'b0; //blue background white text
-
-  assign red[0]=rgb[4];
-    assign red[1]=rgb[5];
-    assign red[2]=rgb[6];
-    assign red[3]=rgb[7];
-    
-    assign blue[0]=rgb[8];
-    assign blue[0]=rgb[9];
-    assign blue[0]=rgb[10];
-    assign blue[0]=rgb[11];
-    
-    assign green[0]=rgb[0];
-    assign green[1]=rgb[1];
-    assign green[2]=rgb[2];
-    assign green[3]=rgb[3];
 endmodule

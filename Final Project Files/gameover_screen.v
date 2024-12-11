@@ -6,8 +6,6 @@ module game_over_screen
     output wire [3:0] green,
     output wire [3:0] blue
     );
-    
-     wire [11:0] rgb;
 
     // VGA Signals
     wire video_on;
@@ -121,27 +119,11 @@ module game_over_screen
     assign rom_bit = rom_data[~rom_col];
     
     // RGB output
-//      assign {red, green, blue} = video_on ? 
-//    (rom_bit ? 
-//        (displayContents ? {4'hF, 4'hF, 4'hF} : {4'h0, 4'h8, 4'h0}) 
-//        : {4'h0, 4'h0, 4'h8}) 
-//    : {4'h0, 4'h0, 4'h0};
-    assign rgb = video_on ? (rom_bit && displayContents ? 12'hFFF : 12'h00F) : 12'h000;
-
-
-    assign red[0]=rgb[4];
-    assign red[1]=rgb[5];
-    assign red[2]=rgb[6];
-    assign red[3]=rgb[7];
-    
-    assign blue[0]=rgb[8];
-    assign blue[0]=rgb[9];
-    assign blue[0]=rgb[10];
-    assign blue[0]=rgb[11];
-    
-    assign green[0]=rgb[0];
-    assign green[1]=rgb[1];
-    assign green[2]=rgb[2];
-    assign green[3]=rgb[3];
+      assign {red, green, blue} = video_on ? 
+    (rom_bit ? 
+        (displayContents ? {4'hF, 4'hF, 4'hF} : {4'h0, 4'h8, 4'h0}) 
+        : {4'h0, 4'h0, 4'h8}) 
+    : {4'h0, 4'h0, 4'h0};
+    //assign rgb = video_on ? (rom_bit && displayContents ? 12'hFFF : 12'h00F) : 12'h000;
 
 endmodule
