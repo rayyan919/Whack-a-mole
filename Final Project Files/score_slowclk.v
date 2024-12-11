@@ -1,11 +1,12 @@
-module ClockDivider(
+ 
+ module ScoreClockDivider(
     input clk,               // Input clock (fast clock from FPGA, e.g., 100 MHz)
     input reset,             // Reset signal
     output reg slow_clk      // Output slower clock
 );
     reg [31:0] counter = 0;  // 32-bit counter
 
-    parameter DIV_FACTOR = 99999990; // Adjust to desired frequency (e.g., 1 Hz if clk = 100 MHz)
+    parameter DIV_FACTOR = 9999900; // Adjust to desired frequency (e.g., 1 Hz if clk = 100 MHz)
 
     always @(posedge clk or posedge reset) begin
         if (reset) begin
