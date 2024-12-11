@@ -123,6 +123,12 @@ module game_timer (
                     time_LSB_ascii <= 8'h30;
                 end
             end
+            // Maintain time_left and time_ascii values when PAUSED
+            else if (current_state == PAUSED) begin
+                // Explicitly maintain the current state when paused
+                time_left <= time_left;
+                // time_MSB_ascii and time_LSB_ascii remain unchanged
+            end
         end
     end
 endmodule
