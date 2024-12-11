@@ -1,6 +1,7 @@
 module win_screen
     (
         input wire clk, reset,
+        input  wire [6:0] score_MSB, score_LSB,
         output wire hsync, vsync,
         output wire [3:0] red,
         output wire [3:0] green,

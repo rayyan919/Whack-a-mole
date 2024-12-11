@@ -1,16 +1,14 @@
 
+
 module game_flow (
     input wire clk,
-//    input fpause,
-//    input wire y,  
     input wire PS2_CLK,    // PS2 Keyboard clock
     input wire PS2_DATA,   // PS2 Keyboard data
     output wire hsync,
     output wire vsync,
     output wire [3:0] red,
     output wire [3:0] green,
-    output wire [3:0] blue,
-    output led
+    output wire [3:0] blue
 );
     // Keyboard interface signals
     wire key_A, key_W, key_D, key_S, key_X, key_space, key_esc;
@@ -29,18 +27,17 @@ module game_flow (
         .esc(key_esc)
     );
 
-    wire [1:0] state;
+    wire [1:0]S;
     wire TA, TB;
-    
-
-    //TIMER 0 is y , missed 3 is z
-    // State transitions using keyboard input
-    assign TA = (state[1] & key_esc) | (~state[1] & ~state[0] & key_space) | (state[1] & state[0] & ~key_space & ~timer_done & z);
-    assign TB = (state[0] & key_esc) | (~state[1] & ~state[0] & key_space) | (state[1] & state[0] & ~key_space & timer_done);
+    wire win,lose;
+  
+    // Screen State transitions using using FSM using T-FlipFlops
+    assign TA = (~S[1] & ~S[0] & key_space) | (~S[1] & S[0] & key_esc) | (S[1] & S[0] & ~win & lose);
+    assign TB = (~S[1] & ~S[0] & key_space) | (S[1] & ~S[0] & key_esc)  |  (S[1] & ~key_space & key_esc & lose) | (S[1] & S[0] & ~key_esc & win) | (S[1]&key_space&key_esc&win&~lose);
 
     // T Flip-Flops
-    T_FlipFlop ff1 (TA, clk, key_esc, state[1]);
-    T_FlipFlop ff2 (TB, clk, key_esc, state[0]);
+    T_FlipFlop ff1 (TA, clk, 1'b0, S[1]);
+    T_FlipFlop ff2 (TB, clk, 1'b0, S[0]);
 
     // Screen module instantiations (using keyboard inputs)
     wire hsync_screen1, vsync_screen1;
@@ -62,20 +59,10 @@ module game_flow (
         .green(green_screen1),
         .blue(blue_screen1)
     );
-
-    //FSM for game start logic 
-    wire G;
-    wire TG;
-    assign TG = (state[0] | G);
-    T_FlipFlop ff6 (TG, clk, key_esc, G);
     
-  
-
-    
+    wire [6:0] score_MSB, score_LSB;
     moles_screen scr2(
         .clk(clk),
-        .G(G),
-//        .fpause(fpause),
         .key_esc(key_esc),
         .left_button(key_A),      // Using keyboard A
         .top_button(key_W),      // Using keyboard W
@@ -84,18 +71,17 @@ module game_flow (
         .mid_button(key_S),      // Using keyboard S
         .enable(1'b1),
         .key_space(key_space),
-        .timer_done_signal(timer_done),
+        .score_MSB(score_MSB),
+        .score_LSB(score_LSB),
         .hsync(hsync_screen2),
         .vsync(vsync_screen2),
         .red(red_screen2),
         .green(green_screen2),
         .blue(blue_screen2),
-        .game_lose(z), 
-        .led(led)       
+        .win(win),
+        .lose(lose)  
     );
     
-    
-
     game_over_screen scr3 (
         .clk(clk),
         .reset(key_esc),
@@ -109,6 +95,8 @@ module game_flow (
     win_screen scr4 (
         .clk(clk),
         .reset(key_esc),
+        .score_MSB(score_MSB),
+        .score_LSB(score_LSB),
         .hsync(hsync_screen4),
         .vsync(vsync_screen4),
         .red(red_screen4),
@@ -117,29 +105,29 @@ module game_flow (
     );
 
     // Output multiplexing logic
-    assign hsync = (state == 2'b00) ? hsync_screen1 :
-                  (state == 2'b11) ? hsync_screen2 :
-                  (state == 2'b01) ? hsync_screen3 :
-                                     hsync_screen4;
+    assign hsync = (S == 2'b00) ? hsync_screen1 :
+                   (S == 2'b11) ? hsync_screen2 :
+                   (S == 2'b01) ? hsync_screen3 :
+                                  hsync_screen4 ;
 
-    assign vsync = (state == 2'b00) ? vsync_screen1 :
-                  (state == 2'b11) ? vsync_screen2 :
-                  (state == 2'b01) ? vsync_screen3 :
-                                     vsync_screen4;
+    assign vsync = (S == 2'b00) ? vsync_screen1 :
+                   (S == 2'b11) ? vsync_screen2 :
+                   (S == 2'b01) ? vsync_screen3 :
+                                  vsync_screen4;
 
-    assign red   = (state == 2'b00) ? red_screen1 :
-                  (state == 2'b11) ? red_screen2 :
-                  (state == 2'b01) ? red_screen3 :
-                                     red_screen4;
+    assign red  = (S == 2'b00) ? red_screen1 :
+                  (S == 2'b11) ? red_screen2 :
+                  (S == 2'b01) ? red_screen3 :
+                                 red_screen4;
 
-    assign green = (state == 2'b00) ? green_screen1 :
-                  (state == 2'b11) ? green_screen2 :
-                  (state == 2'b01) ? green_screen3 :
-                                     green_screen4;
+    assign green = (S == 2'b00) ? green_screen1 :
+                   (S == 2'b11) ? green_screen2 :
+                   (S == 2'b01) ? green_screen3 :
+                                  green_screen4 ;
 
-    assign blue  = (state == 2'b00) ? blue_screen1 :
-                  (state == 2'b11) ? blue_screen2 :
-                  (state == 2'b01) ? blue_screen3 :
-                                     blue_screen4;
+    assign blue  = (S == 2'b00) ? blue_screen1 :
+                   (S == 2'b11) ? blue_screen2 :
+                   (S == 2'b01) ? blue_screen3 :
+                                  blue_screen4;
 
 endmodule

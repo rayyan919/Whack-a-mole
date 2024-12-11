@@ -1,12 +1,12 @@
-module combined_display (
+  module combined_display (
     input wire clk,
     input wire rst,
-    input wire G,
     input wire [2:0] oval_select,
     input wire enable,
     input wire [3:0]score,
     input wire pause,
     output wire timer_done_signal,
+    output wire [6:0] score_MSB, score_LSB,
     output wire hsync, vsync,
     output wire [3:0] red,
     output wire [3:0] green,
@@ -54,18 +54,10 @@ module combined_display (
         .slow_clk(slow_clk)
     );
 
-//    // Counter and Timer
-//    wire [6:0] counterValue;
-//    counter counter1(
-//        .clk(clk),
-//        .reset(rst),
-//        .out(counterValue)
-//    );
-
     wire [6:0] time_MSB, time_LSB;
     game_timer game_timer_unit (
         .clk(slow_clk),
-        .rst(G),
+        .rst(rst),
         .enable(enable),
         .pause(pause),
         .time_MSB_ascii(time_MSB),
@@ -73,7 +65,7 @@ module combined_display (
         .timer_done(timer_done_signal)
     );
     
-    wire [6:0] score_MSB, score_LSB;
+//    wire [6:0] score_MSB, score_LSB;
     score_display score_unit(
         .clk(slow_clk),
         .rst(rst),
@@ -225,44 +217,3 @@ module combined_display (
 
 endmodule
 
-
-//module score_display (
-
-//    input wire clk,
-////    input G,
-//    input wire rst,
-//    input wire [3:0] score,
-//    output reg [7:0] score_MSB_ascii,
-//    output reg [7:0] score_LSB_ascii
-//);
-
-//  // ASCII Conversion Logic
-//    always @(posedge clk or posedge rst) begin
-//        if (rst) begin
-//            score_MSB_ascii <= 8'h30; // ASCII '0'
-//            score_LSB_ascii <= 8'h30; // ASCII '0'
-//        end
-//        else begin
-//            case (score)
-//                4'd0: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h30; end // "00"
-//                4'd1: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h31; end // "01"
-//                4'd2: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h32; end // "02"
-//                4'd3: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h33; end // "03"
-//                4'd4: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h34; end // "04"
-//                4'd5: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h35; end // "05"
-//                4'd6: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h36; end // "06"
-//                4'd7: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h37; end // "07"
-//                4'd8: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h38; end // "08"
-//                4'd9: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h39; end // "09"
-//                4'd10: begin score_MSB_ascii <= 8'h31; score_LSB_ascii <= 8'h30; end // "10"
-//                4'd11: begin score_MSB_ascii <= 8'h31; score_LSB_ascii <= 8'h31; end // "11"
-//                4'd12: begin score_MSB_ascii <= 8'h31; score_LSB_ascii <= 8'h32; end // "12"
-//                4'd13: begin score_MSB_ascii <= 8'h31; score_LSB_ascii <= 8'h33; end // "13"
-//                4'd14: begin score_MSB_ascii <= 8'h31; score_LSB_ascii <= 8'h34; end // "14"
-//                4'd15: begin score_MSB_ascii <= 8'h31; score_LSB_ascii <= 8'h35; end // "15"
-//                default: begin score_MSB_ascii <= 8'h30; score_LSB_ascii <= 8'h30; end // Default "00"
-//            endcase
-//            end
-//        end
-////    end
-//endmodule

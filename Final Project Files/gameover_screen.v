@@ -3,8 +3,8 @@ module game_over_screen
         input wire clk, reset,
         output wire hsync, vsync,
         output wire [3:0] red,
-    output wire [3:0] green,
-    output wire [3:0] blue
+        output wire [3:0] green,
+        output wire [3:0] blue
     );
 
     // VGA Signals

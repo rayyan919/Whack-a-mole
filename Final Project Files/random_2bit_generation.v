@@ -1,4 +1,4 @@
-module random_2bit_generation(
+module two_bit_generation(
     input clk,             // Clock input
     output reg [1:0] out   // 2-bit output
 );

@@ -6,8 +6,7 @@ module mole_display (
     output wire vsync,       // Vertical sync
     output reg [3:0] red,    // Red color (4 bits)
     output reg [3:0] green,  // Green color (4 bits)
-    output reg [3:0] blue,   // Blue color (4 bits)
-    output wire [63:0] debug_mole_pattern  // Debug output of mole pattern
+    output reg [3:0] blue   // Blue color (4 bits)
 );
 
     // Internal signals

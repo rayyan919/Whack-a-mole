@@ -1,3 +1,4 @@
+
 `timescale 1ns / 1ps 
 
 module game_timer (
@@ -5,8 +6,8 @@ module game_timer (
     input wire rst,
     input wire enable,
     input wire pause,
-    output reg [7:0] time_MSB_ascii,
-    output reg [7:0] time_LSB_ascii,
+    output reg [6:0] time_MSB_ascii,
+    output reg [6:0] time_LSB_ascii,
     output reg timer_done
 );
     // State encoding using standard parameters
@@ -137,8 +138,8 @@ module score_display (
     input wire clk,
     input wire rst,
     input wire [3:0] score,
-    output reg [7:0] score_MSB_ascii,
-    output reg [7:0] score_LSB_ascii
+    output reg [6:0] score_MSB_ascii,
+    output reg [6:0] score_LSB_ascii
 );
     // Mealy FSM implementation
     always @(posedge clk or posedge rst) begin
