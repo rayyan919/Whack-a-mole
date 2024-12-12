@@ -1,7 +1,7 @@
 module win_screen
     (
         input wire clk, reset,
-        input  wire [6:0] score_MSB, score_LSB,
+//        input  wire [6:0] score_MSB, score_LSB,
         output wire hsync, vsync,
         output wire [3:0] red,
         output wire [3:0] green,
@@ -14,7 +14,7 @@ module win_screen
     
     // Display Signals
     wire [6:0] ascii; 
-    wire d[7:0];  // Changed to 8 elements for "GAME WIN!"
+    wire d[8:0];  // Changed to 8 elements for "GAME WIN!"
     wire displayContents;
 
     // Instantiate VGA Sync Module
@@ -30,34 +30,36 @@ module win_screen
 
     // Define "GAME WIN!" ASCII codes
     localparam [6:0] G = 7'h47, A = 7'h41, M = 7'h4D, E = 7'h45, 
-                     W = 7'h57, I = 7'h49, N = 7'h4E, EX = 7'h21;
+                     W = 7'h57, I = 7'h49, N = 7'h4E, EX = 7'h21, SP = 7'h20;
 
     // Character position (center of the screen)
     // For 640x480 display, center around x=320
-    wire [9:0] x_desired[7:0];
+    wire [9:0] x_desired[8:0];
     wire [9:0] y_desired;
     
-    // Center the text - starting from x=280 with 8 pixels per character
-    assign x_desired[0] = 10'd280;  // G
-    assign x_desired[1] = 10'd288;  // A
-    assign x_desired[2] = 10'd296;  // M
-    assign x_desired[3] = 10'd304;  // E
-    assign x_desired[4] = 10'd312;  // Space
+    // Center the text - starting from x=272 to include space
+    assign x_desired[0] = 10'd272;  // G
+    assign x_desired[1] = 10'd280;  // A
+    assign x_desired[2] = 10'd288;  // M
+    assign x_desired[3] = 10'd296;  // E
+    assign x_desired[4] = 10'd304;  // Space
     assign x_desired[5] = 10'd320;  // W
     assign x_desired[6] = 10'd328;  // I
     assign x_desired[7] = 10'd336;  // N
+    assign x_desired[8] = 10'd344; //!
     assign y_desired = 10'd240;     // Vertical center
 
-    // Active characters
-    wire [6:0] asc[7:0];
+    // Active characters - add explicit space
+    wire [6:0] asc[8:0];
     assign asc[0] = G;
     assign asc[1] = A;
     assign asc[2] = M;
     assign asc[3] = E;
-    assign asc[4] = W;
-    assign asc[5] = I;
-    assign asc[6] = N;
-    assign asc[7] = EX;
+    assign asc[4] = SP;  // Space
+    assign asc[5] = W;
+    assign asc[6] = I;
+    assign asc[7] = N;
+    assign asc[8] = EX;
 
     // Generate text instances
     textGeneration t0 (.clk(clk), .reset(reset), .ascii_In(asc[0]),
@@ -83,19 +85,23 @@ module win_screen
 
     textGeneration t7 (.clk(clk), .reset(reset), .ascii_In(asc[7]),
         .x(x), .y(y), .displayContents(d[7]), .x_desired(x_desired[7]), .y_desired(y_desired));
+    
+    textGeneration t8 (.clk(clk), .reset(reset), .ascii_In(asc[8]),
+        .x(x), .y(y), .displayContents(d[8]), .x_desired(x_desired[8]), .y_desired(y_desired));
         
     assign displayContents = d[0] | d[1] | d[2] | d[3] | d[4] | d[5] | 
-                           d[6] | d[7];
+                           d[6] | d[7] | d[8];
 
     // ASCII decoder                        
     assign ascii = d[0] ? asc[0] :    // G
                   d[1] ? asc[1] :    // A
                   d[2] ? asc[2] :    // M
                   d[3] ? asc[3] :    // E
-                  d[4] ? asc[4] :    // W
-                  d[5] ? asc[5] :    // I
-                  d[6] ? asc[6] :    // N
-                  d[7] ? asc[7] :    // !
+                  d[4] ? asc[4] :    // Space
+                  d[5] ? asc[5] :    // W
+                  d[6] ? asc[6] :    // I
+                  d[7] ? asc[7] :    // N
+                  d[8] ? asc[8] :    //!
                   7'h20;             // Space (default)
         
     // ROM connections

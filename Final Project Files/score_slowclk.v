@@ -6,7 +6,7 @@
 );
     reg [31:0] counter = 0;  // 32-bit counter
 
-    parameter DIV_FACTOR = 9999900; // Adjust to desired frequency (e.g., 1 Hz if clk = 100 MHz)
+    parameter DIV_FACTOR = 9990000; // Adjust to desired frequency (e.g., 1 Hz if clk = 100 MHz)
 
     always @(posedge clk or posedge reset) begin
         if (reset) begin

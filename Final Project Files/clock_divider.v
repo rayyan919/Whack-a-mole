@@ -5,8 +5,8 @@ module ClockDivider(
 );
     reg [31:0] counter = 0;  // 32-bit counter
 
-    parameter DIV_FACTOR = 99999990; // Adjust to desired frequency (e.g., 1 Hz if clk = 100 MHz)
-
+// Adjust to 0.75 seconds
+ parameter DIV_FACTOR = 37500000;
     always @(posedge clk or posedge reset) begin
         if (reset) begin
             counter <= 0;

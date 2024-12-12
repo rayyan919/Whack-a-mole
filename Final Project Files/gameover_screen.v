@@ -11,9 +11,9 @@ module game_over_screen
     wire video_on;
     wire [9:0] x, y;
     
-    //Display Signals
+    // Display Signals
     wire [6:0] ascii; 
-    wire d[8:0];  // Changed to 9 elements for "GAME OVER!"
+    wire d[9:0];  // 9 elements for "GAME OVER!"
     wire displayContents;
 
     // Instantiate VGA Sync Module
@@ -29,36 +29,38 @@ module game_over_screen
 
     // Define "GAME OVER!" ASCII codes
     localparam [6:0] G = 7'h47, A = 7'h41, M = 7'h4D, E = 7'h45, 
-                     O = 7'h4F, V = 7'h56, R = 7'h52, EX = 7'h21;
+                     O = 7'h4F, V = 7'h56, R = 7'h52, EX = 7'h21, SP = 7'h20;
 
     // Character position (center of the screen)
     // For 640x480 display, center around x=320
-    wire [9:0] x_desired[8:0];
+    wire [9:0] x_desired[9:0];
     wire [9:0] y_desired;
     
-    // Center the text - starting from x=280 with 8 pixels per character
-    assign x_desired[0] = 10'd280;  // G
-    assign x_desired[1] = 10'd288;  // A
-    assign x_desired[2] = 10'd296;  // M
-    assign x_desired[3] = 10'd304;  // E
-    assign x_desired[4] = 10'd312;  // Space
+    // Center the text - starting from x=272 to include space
+    assign x_desired[0] = 10'd272;  // G
+    assign x_desired[1] = 10'd280;  // A
+    assign x_desired[2] = 10'd288;  // M
+    assign x_desired[3] = 10'd296;  // E
+    assign x_desired[4] = 10'd304;  // Space
     assign x_desired[5] = 10'd320;  // O
     assign x_desired[6] = 10'd328;  // V
     assign x_desired[7] = 10'd336;  // E
     assign x_desired[8] = 10'd344;  // R
+    assign x_desired[9] = 10'd352; //!
     assign y_desired = 10'd240;     // Vertical center
 
-    // Active characters
-    wire [6:0] asc[8:0];
+    // Active characters - add explicit space
+    wire [6:0] asc[9:0];
     assign asc[0] = G;
     assign asc[1] = A;
     assign asc[2] = M;
     assign asc[3] = E;
-    assign asc[4] = O;
-    assign asc[5] = V;
-    assign asc[6] = E;
-    assign asc[7] = R;
-    assign asc[8] = EX;
+    assign asc[4] = SP;  // Space
+    assign asc[5] = O;
+    assign asc[6] = V;
+    assign asc[7] = E;
+    assign asc[8] = R;
+    assign asc[9] = EX;
 
     // Generate text instances
     textGeneration t0 (.clk(clk), .reset(reset), .ascii_In(asc[0]),
@@ -81,26 +83,30 @@ module game_over_screen
         
     textGeneration t6 (.clk(clk), .reset(reset), .ascii_In(asc[6]),
         .x(x), .y(y), .displayContents(d[6]), .x_desired(x_desired[6]), .y_desired(y_desired));
-        
+
     textGeneration t7 (.clk(clk), .reset(reset), .ascii_In(asc[7]),
         .x(x), .y(y), .displayContents(d[7]), .x_desired(x_desired[7]), .y_desired(y_desired));
-
+    
     textGeneration t8 (.clk(clk), .reset(reset), .ascii_In(asc[8]),
         .x(x), .y(y), .displayContents(d[8]), .x_desired(x_desired[8]), .y_desired(y_desired));
+
+    textGeneration t9 (.clk(clk), .reset(reset), .ascii_In(asc[9]),
+        .x(x), .y(y), .displayContents(d[9]), .x_desired(x_desired[9]), .y_desired(y_desired));
         
     assign displayContents = d[0] | d[1] | d[2] | d[3] | d[4] | d[5] | 
-                           d[6] | d[7] | d[8];
+                           d[6] | d[7] | d[8] | d[9];
 
     // ASCII decoder                        
     assign ascii = d[0] ? asc[0] :    // G
                   d[1] ? asc[1] :    // A
                   d[2] ? asc[2] :    // M
                   d[3] ? asc[3] :    // E
-                  d[4] ? asc[4] :    // O
-                  d[5] ? asc[5] :    // V
-                  d[6] ? asc[6] :    // E
-                  d[7] ? asc[7] :    // R
-                  d[8] ? asc[8] :    // !
+                  d[4] ? asc[4] :    // Space
+                  d[5] ? asc[5] :    // O
+                  d[6] ? asc[6] :    // V
+                  d[7] ? asc[7] :    // E
+                  d[8] ? asc[8] :    // R
+                  d[9] ? asc[9] :    //!
                   7'h20;             // Space (default)
         
     // ROM connections
@@ -119,11 +125,10 @@ module game_over_screen
     assign rom_bit = rom_data[~rom_col];
     
     // RGB output
-      assign {red, green, blue} = video_on ? 
+    assign {red, green, blue} = video_on ? 
     (rom_bit ? 
         (displayContents ? {4'hF, 4'hF, 4'hF} : {4'h0, 4'h8, 4'h0}) 
         : {4'h0, 4'h0, 4'h8}) 
     : {4'h0, 4'h0, 4'h0};
-    //assign rgb = video_on ? (rom_bit && displayContents ? 12'hFFF : 12'h00F) : 12'h000;
 
 endmodule

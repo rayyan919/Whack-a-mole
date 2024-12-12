@@ -3,8 +3,7 @@ module ascii_rom(clk, rom_addr, data);
         input wire [10:0] rom_addr;
         output reg [7:0] data;
         reg [10:0] rom_addr_next;
-        //Since there is going to be a lot of data stored here
-        //Infer a block ram
+      
         (* rom_style = "block" *)
         
         //Buffer  of rom_addr coming in from vga_test

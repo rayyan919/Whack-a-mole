@@ -25,7 +25,6 @@ set_property PACKAGE_PIN G17 [get_ports {red[2]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {red[2]}]
 set_property PACKAGE_PIN D17 [get_ports {red[3]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {red[3]}]
- 
 
 set_property PACKAGE_PIN N18 [get_ports {green[0]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {green[0]}]
