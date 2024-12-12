@@ -8,7 +8,7 @@ module moles_screen (
     input mid_button,  // button middle
     input enable,
     input key_space,
-    output [6:0] score_MSB, score_LSB,
+//    output [6:0] score_MSB, score_LSB,
     output wire hsync,
     output wire vsync,
     output wire [3:0] red,    // Assuming 4-bit color depth
@@ -42,7 +42,7 @@ module moles_screen (
     );
       
     
-    wire F5, F15;
+    wire F5, F15, correctwhack;
     // Instantiate the score_correctwhack module
     score_correctwhack scw (
         .clk(slowclk),  
@@ -56,7 +56,8 @@ module moles_screen (
         .S(mid_button),
         .score(score),    
         .F15(F15),
-        .F5(F5)
+        .F5(F5),
+        .cw(correctwhack)
     );
     
     wire timer_done;
@@ -66,11 +67,12 @@ module moles_screen (
         .rst(key_esc),              
         .oval_select(mole_current_state), 
         .enable(1'b1),          // Enable set to 1 for now
+        .correctwhack(correctwhack),
         .score(score),          
         .pause(key_space), 
         .timer_done_signal(timer_done),    
-        .score_MSB(score_MSB),
-        .score_LSB(score_LSB),     
+//        .score_MSB(score_MSB),
+//        .score_LSB(score_LSB),     
         .hsync(hsync),          
         .vsync(vsync),          
         .red(red),              

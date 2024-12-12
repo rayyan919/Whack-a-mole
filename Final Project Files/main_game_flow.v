@@ -60,7 +60,7 @@ module game_flow (
         .blue(blue_screen1)
     );
     
-    wire [6:0] score_MSB, score_LSB;
+   // wire [6:0] score_MSB, score_LSB;
     moles_screen scr2(
         .clk(clk),
         .key_esc(key_esc),
@@ -71,8 +71,8 @@ module game_flow (
         .mid_button(key_S),      // Using keyboard S
         .enable(1'b1),
         .key_space(key_space),
-        .score_MSB(score_MSB),
-        .score_LSB(score_LSB),
+//        .score_MSB(score_MSB),
+//        .score_LSB(score_LSB),
         .hsync(hsync_screen2),
         .vsync(vsync_screen2),
         .red(red_screen2),
@@ -95,8 +95,8 @@ module game_flow (
     win_screen scr4 (
         .clk(clk),
         .reset(key_esc),
-        .score_MSB(score_MSB),
-        .score_LSB(score_LSB),
+//        .score_MSB(score_MSB),
+//        .score_LSB(score_LSB),
         .hsync(hsync_screen4),
         .vsync(vsync_screen4),
         .red(red_screen4),

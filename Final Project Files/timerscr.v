@@ -3,10 +3,11 @@
     input wire rst,
     input wire [2:0] oval_select,
     input wire enable,
+    input wire correctwhack,
     input wire [3:0]score,
     input wire pause,
     output wire timer_done_signal,
-    output wire [6:0] score_MSB, score_LSB,
+//    output  [6:0] score_MSB, score_LSB,
     output wire hsync, vsync,
     output wire [3:0] red,
     output wire [3:0] green,
@@ -20,6 +21,10 @@
 
     wire [3:0] mole_red, mole_green, mole_blue;
     wire mole_hsync, mole_vsync;
+    
+    // Heart display signals
+    wire [3:0] heart_red, heart_green, heart_blue;
+    wire heart_hsync, heart_vsync;
     
     // New register to hold the selected oval during pause
     reg [2:0] paused_oval_select;
@@ -45,6 +50,19 @@
         .green(mole_green),
         .blue(mole_blue)
     );
+    
+    // Instantiate heart display module
+    wire heart_enable = correctwhack&~pause;
+    heart_display heart_display_unit (
+        .clk(clk),
+        .reset(rst),
+        .heart_enable(heart_enable),
+        .hsync(heart_hsync),
+        .vsync(heart_vsync),
+        .red(heart_red),
+        .green(heart_green),
+        .blue(heart_blue)
+    );
 
     // Clock divider
     wire slow_clk;
@@ -65,7 +83,7 @@
         .timer_done(timer_done_signal)
     );
     
-//    wire [6:0] score_MSB, score_LSB;
+   wire [6:0] score_MSB, score_LSB;
     score_display score_unit(
         .clk(slow_clk),
         .rst(rst),
@@ -204,12 +222,15 @@
             paused_oval_select <= 3'd0;
     end
 
-    // Output color blending (to incorporate mole)
+     // Output color blending with priority for heart display
     wire [3:0] final_red, final_green, final_blue;
-    assign final_red = (mole_red != 4'h0) ? mole_red : pixel_color[11:8];
-    assign final_green = (mole_green != 4'h0) ? mole_green : pixel_color[7:4];
-    assign final_blue = (mole_blue != 4'h0) ? mole_blue : pixel_color[3:0];
-    
+    assign final_red = (heart_red != 4'h0) ? heart_red :
+                       (mole_red != 4'h0) ? mole_red : pixel_color[11:8];
+    assign final_green = (heart_green != 4'h0) ? heart_green :
+                         (mole_green != 4'h0) ? mole_green : pixel_color[7:4];
+    assign final_blue = (heart_blue != 4'h0) ? heart_blue :
+                        (mole_blue != 4'h0) ? mole_blue : pixel_color[3:0];
+   
     // Assign final colors
     assign red = final_red;
     assign green = final_green;
